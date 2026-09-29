@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixie IT Services - Inventory Management System</title>
+    <!-- FontAwesome & Chart.js CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style_11.css">
+
+</head>
+<body>
+
+    <!-- ==================== AUTHENTICATION CONTAINER ==================== -->
+    <div id="authContainer" class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="fcv-logo.jpg" alt="FCV Logo" class="auth-logo">
+                <h2>Fixie IT Services</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Inventory & Stock Management System</p>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <div class="input-group-box">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="username" class="form-control" placeholder="Enter username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-group-box password-container">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+                        <button type="button" class="toggle-password" id="toggleLoginPass" onclick="togglePasswordVisibility('password', 'toggleLoginPass')">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary full-width" style="margin-top: 10px;">
+                    <i class="fa-solid fa-right-to-bracket"></i> Login
+                </button>
+
+                <div class="auth-footer">
+                    <button type="button" class="btn-link" onclick="openAuthModal('forgotUserModal')">Forgot Username?</button>
+                    <button type="button" class="btn-link" onclick="openAuthModal('forgotPassModal')">Forgot Password?</button>
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Don't have an account? </span>
+                    <button type="button" class="btn-link" onclick="openAuthModal('signUpModal')">Sign Up</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== APP MAIN CONTAINER ==================== -->
+    <div id="appContainer" class="app-layout hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="fcv-logo.jpg" alt="FCV Logo" class="sidebar-logo">
+                <div class="brand-text">
+                    <h3>Fixie IT System</h3>
+                    <span>INVENTORY</span>
+                </div>
+            </div>
+            <nav class="sidebar-menu">
+                <button class="nav-btn active" data-target="dashboardPage" onclick="switchPage('dashboardPage', this)">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-btn" data-target="inventoryPage" onclick="switchPage('inventoryPage', this)">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Inventory List</span>
+                </button>
+                <button class="nav-btn" data-target="stockPage" onclick="switchPage('stockPage', this)">
+                    <i class="fa-solid fa-right-left"></i>
+                    <span>Stock In / Out</span>
+                </button>
+                <button class="nav-btn" data-target="logsPage" onclick="switchPage('logsPage', this)">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Audit Logs</span>
+                </button>
+            </nav>
+            <div style="padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <button class="btn btn-secondary full-width" onclick="seedSampleData()">
+                    <i class="fa-solid fa-database"></i> Reset Demo Data
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+            <!-- TOPBAR -->
+            <header class="top-nav">
+                <div class="page-title">
+                    <h2 id="currentPageTitle">Dashboard Overview</h2>
+                    <span id="currentDate"></span>
+                </div>
+                <div class="user-profile" style="display: flex; align-items: center; gap: 12px;">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div>
+                        <div id="displayUserName" style="font-weight: 600; font-size: 0.9rem;">User</div>
+                        <small id="displayUserRole" class="badge badge-info" style="font-size: 0.7rem;">Role</small>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="handleLogout()" style="margin-left: 10px;" title="Logout">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ==================== PAGE 1: DASHBOARD ==================== -->
+            <section id="dashboardPage" class="page-content active-page">
+                
+                <!-- ADMIN ONLY: Active Users Monitor -->
+                <div id="activeUsersCard" class="card admin-only mb-4" style="display: none;">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-users-viewfinder text-success"></i> Active Users Monitoring</h3>
+                        <span class="badge badge-success" id="activeUserCount">1 Active Now</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Current Page / Activity</th>
+                                    <th>Status</th>
+                                    <th>Last Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activeUsersTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon blue">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Total Products</h3>
+                            <p id="metricTotalProducts">0</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon green">
+                            <i class="fa-solid fa-cubes"></i>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Total Stock Value</h3>
+                            <p id="metricTotalValue">₱0.00</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon orange">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Low Stock Alert</h3>
+                            <p id="metricLowStock">0</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon red">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Out of Stock</h3>
+                            <p id="metricOutOfStock">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-charts-grid">
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-simple"></i> Inventory by Category</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-line"></i> Top Stock Quantities</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="stockChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clock"></i> Recent Stock Movement</h3>
+                        <button class="btn btn-link" onclick="switchPage('logsPage', document.querySelector('[data-target=logsPage]'))">View All Logs</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date/Time</th>
+                                    <th>Product Name</th>
+                                    <th>Type</th>
+                                    <th>Qty</th>
+                                    <th>User</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentLogsTable">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== PAGE 2: INVENTORY MANAGEMENT ==================== -->
+            <section id="inventoryPage" class="page-content hidden-page">
+                <div class="card-toolbar">
+                    <div class="search-input">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="inventorySearch" class="form-control" placeholder="Search product name or SKU..." oninput="renderInventoryTable()">
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <select id="categoryFilter" class="form-control" style="width: 180px;" onchange="renderInventoryTable()">
+                            <option value="ALL">All Categories</option>
+                            <option value="GPU">GPU</option>
+                            <option value="CPU">CPU</option>
+                            <option value="RAM">RAM</option>
+                            <option value="Storage">Storage</option>
+                            <option value="Power Supply">Power Supply</option>
+                            <option value="Motherboard">Motherboard</option>
+                        </select>
+                        <button class="btn btn-primary admin-only" onclick="openAddProductModal()">
+                            <i class="fa-solid fa-plus"></i> Add Product
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== PAGE 3: STOCK IN / OUT ==================== -->
+            <section id="stockPage" class="page-content hidden-page">
+                <div class="stock-action-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-right-left"></i> Transaction Form</h3>
+                        </div>
+                        <form id="stockMovementForm" onsubmit="handleStockMovement(event)">
+                            <div class="form-group">
+                                <label>Select Product</label>
+                                <select id="stockProductSelect" class="form-control" required>
+                                    <!-- Options populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Transaction Type</label>
+                                <select id="stockType" class="form-control" required>
+                                    <option value="IN">Stock IN (Restock / Addition)</option>
+                                    <option value="OUT">Stock OUT (Dispatch / Sale)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <input type="number" id="stockQty" class="form-control" min="1" required placeholder="Enter quantity">
+                            </div>
+                            <div class="form-group">
+                                <label>Notes / Reference</label>
+                                <input type="text" id="stockNotes" class="form-control" placeholder="e.g. Supplier PO #1042 or Customer Receipt">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                                <i class="fa-solid fa-floppy-disk"></i> Submit Transaction
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-triangle-exclamation text-warning"></i> Low Stock Priority Items</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Category</th>
+                                        <th>Current Stock</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lowStockPriorityTable">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== PAGE 4: AUDIT LOGS ==================== -->
+            <section id="logsPage" class="page-content hidden-page">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> Complete Activity & Audit Trail</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Item Affected</th>
+                                    <th>Type</th>
+                                    <th>Quantity</th>
+                                    <th>Logged By</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullLogsTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- ADD / EDIT PRODUCT MODAL -->
+    <div id="productModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="productModalTitle"><i class="fa-solid fa-box"></i> Add New Product</h3>
+                <button type="button" class="close-btn" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="productForm" onsubmit="handleSaveProduct(event)">
+                <input type="hidden" id="prodId">
+                <div class="form-group">
+                    <label>SKU Code</label>
+                    <input type="text" id="prodSKU" class="form-control" required placeholder="e.g. GPU-RTX4060">
+                </div>
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="prodName" class="form-control" required placeholder="e.g. ASUS Dual RTX 4060">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="prodCategory" class="form-control" required>
+                        <option value="GPU">GPU</option>
+                        <option value="CPU">CPU</option>
+                        <option value="RAM">RAM</option>
+                        <option value="Storage">Storage</option>
+                        <option value="Power Supply">Power Supply</option>
+                        <option value="Motherboard">Motherboard</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Price (₱)</label>
+                        <input type="number" step="0.01" id="prodPrice" class="form-control" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Initial Stock</label>
+                        <input type="number" id="prodStock" class="form-control" required min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Low Stock Threshold Alert</label>
+                    <input type="number" id="prodMinStock" class="form-control" required min="1" value="5">
+                </div>
+                <div class="modal-footer" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SIGN UP MODAL -->
+    <div id="signUpModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-plus"></i> Create Account</h3>
+                <button type="button" class="close-btn" onclick="closeAuthModal('signUpModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="signUpForm" onsubmit="handleSignUp(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="signUpFullName" class="form-control" required placeholder="e.g. John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Desired Username</label>
+                    <input type="text" id="signUpUsername" class="form-control" required placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="signUpRole" class="form-control" required>
+                        <option value="Staff">Staff</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-group-box password-container">
+                        <input type="password" id="signUpPassword" class="form-control" required placeholder="Enter password">
+                        <button type="button" class="toggle-password" id="toggleSignUpPass" onclick="togglePasswordVisibility('signUpPassword', 'toggleSignUpPass')">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <div class="input-group-box password-container">
+                        <input type="password" id="signUpConfirmPassword" class="form-control" required placeholder="Re-enter password">
+                        <button type="button" class="toggle-password" id="toggleSignUpConfirmPass" onclick="togglePasswordVisibility('signUpConfirmPassword', 'toggleSignUpConfirmPass')">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary full-width" style="margin-top: 10px;">Register Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORGOT USERNAME MODAL -->
+    <div id="forgotUserModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-id-badge"></i> Recover Username</h3>
+                <button type="button" class="close-btn" onclick="closeAuthModal('forgotUserModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="forgotUserForm" onsubmit="handleForgotUsername(event)">
+                <div class="form-group">
+                    <label>Enter Registered Full Name</label>
+                    <input type="text" id="recoverFullName" class="form-control" required placeholder="e.g. Sean Lander Espiritu">
+                </div>
+                <button type="submit" class="btn btn-primary full-width">Find Username</button>
+                <div id="recoveredUserResult" class="recovery-result-box hidden">
+                    <p>Your registered username is:</p>
+                    <code id="displayRecoveredUsername"></code>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORGOT PASSWORD MODAL -->
+    <div id="forgotPassModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key"></i> Reset Password</h3>
+                <button type="button" class="close-btn" onclick="closeAuthModal('forgotPassModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="forgotPassForm" onsubmit="handleResetPassword(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="resetUsername" class="form-control" required placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <div class="input-group-box password-container">
+                        <input type="password" id="resetNewPassword" class="form-control" required placeholder="Enter new password">
+                        <button type="button" class="toggle-password" id="toggleResetPass" onclick="togglePasswordVisibility('resetNewPassword', 'toggleResetPass')">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <div class="input-group-box password-container">
+                        <input type="password" id="resetConfirmPassword" class="form-control" required placeholder="Confirm new password">
+                        <button type="button" class="toggle-password" id="toggleResetConfirmPass" onclick="togglePasswordVisibility('resetConfirmPassword', 'toggleResetConfirmPass')">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary full-width" style="margin-top: 10px;">Update Password</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+
+    <script>
+        const DEFAULT_ACCOUNTS = [
+            { username: "seanlander", pass: "espiritu20", role: "Admin", name: "Sean Lander Espiritu" },
+            { username: "jhonathan", pass: "Gazmen21", role: "Staff", name: "Jhonathan Gazmen" }
+        ];
+
+        let accounts = [];
+        let currentUser = null;
+        let inventory = [];
+        let logs = [];
+
+        let categoryChartInstance = null;
+        let stockChartInstance = null;
+
+        const SAMPLE_INVENTORY = [
+            { id: "1", sku: "GPU-RTX4060", name: "ASUS Dual RTX 4060 8GB", category: "GPU", price: 18950.00, stock: 12, minStock: 5 },
+            { id: "2", sku: "CPU-I513400F", name: "Intel Core i5-13400F Tray", category: "CPU", price: 11200.00, stock: 3, minStock: 5 },
+            { id: "3", sku: "RAM-DDR416GB", name: "T-Force Delta RGB 16GB (2x8GB) DDR4", category: "RAM", price: 3450.00, stock: 25, minStock: 8 },
+            { id: "4", sku: "STO-NVME1TB", name: "Kingston NV2 1TB NVMe M.2 SSD", category: "Storage", price: 3800.00, stock: 0, minStock: 6 },
+            { id: "5", sku: "PSU-650W", name: "Corsair CV650 650W 80+ Bronze", category: "Power Supply", price: 3300.00, stock: 8, minStock: 4 },
+            { id: "6", sku: "MOBO-B660M", name: "Gigabyte B660M DS3H AX", category: "Motherboard", price: 7400.00, stock: 4, minStock: 5 }
+        ];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadStoredAccounts();
+            loadStoredData();
+            updateCurrentDate();
+            checkSession();
+            setInterval(updateHeartbeat, 5000);
+        });
+
+        function loadStoredAccounts() {
+            const storedAccounts = localStorage.getItem("fixie_accounts");
+            if (storedAccounts) {
+                accounts = JSON.parse(storedAccounts);
+            } else {
+                accounts = [...DEFAULT_ACCOUNTS];
+                saveAccounts();
+            }
+        }
+
+        function saveAccounts() {
+            localStorage.setItem("fixie_accounts", JSON.stringify(accounts));
+        }
+
+        function loadStoredData() {
+            const storedInv = localStorage.getItem("fixie_inventory");
+            const storedLogs = localStorage.getItem("fixie_logs");
+
+            if (storedInv) {
+                inventory = JSON.parse(storedInv);
+            } else {
+                inventory = [...SAMPLE_INVENTORY];
+                saveInventory();
+            }
+
+            if (storedLogs) {
+                logs = JSON.parse(storedLogs);
+            } else {
+                logs = [
+                    {
+                        timestamp: new Date().toLocaleString(),
+                        sku: "GPU-RTX4060",
+                        productName: "ASUS Dual RTX 4060 8GB",
+                        type: "IN",
+                        qty: 12,
+                        user: "seanlander",
+                        notes: "Initial inventory setup"
+                    }
+                ];
+                saveLogs();
+            }
+        }
+
+        function saveInventory() {
+            localStorage.setItem("fixie_inventory", JSON.stringify(inventory));
+        }
+
+        function saveLogs() {
+            localStorage.setItem("fixie_logs", JSON.stringify(logs));
+        }
+
+        function updateCurrentDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            const dateStr = new Date().toLocaleDateString('en-US', options);
+            const dateEl = document.getElementById("currentDate");
+            if (dateEl) dateEl.textContent = dateStr;
+        }
+
+        function seedSampleData() {
+            if (confirm("Reset inventory to initial demo dataset?")) {
+                inventory = [...SAMPLE_INVENTORY];
+                logs = [];
+                saveInventory();
+                saveLogs();
+                refreshAllViews();
+                showToast("System data reset to initial demo state.", "info");
+            }
+        }
+
+        function updateHeartbeat(currentPage = "Dashboard Overview") {
+            if (!currentUser) return;
+            let activeSessions = JSON.parse(localStorage.getItem("fixie_active_sessions") || "{}");
+            activeSessions[currentUser.username] = {
+                username: currentUser.username,
+                role: currentUser.role,
+                lastSeen: Date.now(),
+                page: currentPage
+            };
+            localStorage.setItem("fixie_active_sessions", JSON.stringify(activeSessions));
+            if (currentUser.role === "Admin") {
+                renderActiveUsers();
+            }
+        }
+
+        function renderActiveUsers() {
+            const tbody = document.getElementById("activeUsersTableBody");
+            const badgeCount = document.getElementById("activeUserCount");
+            if (!tbody) return;
+
+            let activeSessions = JSON.parse(localStorage.getItem("fixie_active_sessions") || "{}");
+            const now = Date.now();
+            const timeout = 15000;
+
+            tbody.innerHTML = "";
+            let activeCount = 0;
+
+            Object.values(activeSessions).forEach(session => {
+                const isOnline = (now - session.lastSeen) < timeout;
+                if (isOnline) {
+                    activeCount++;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${session.username}</strong></td>
+                        <td><span class="badge ${session.role === 'Admin' ? 'badge-danger' : 'badge-info'}">${session.role}</span></td>
+                        <td><i class="fa-solid fa-folder-open text-muted"></i> ${session.page || 'Browsing Inventory'}</td>
+                        <td><span class="badge badge-success"><i class="fa-solid fa-circle text-success"></i> Active Now</span></td>
+                        <td><small>${new Date(session.lastSeen).toLocaleTimeString()}</small></td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            if (badgeCount) badgeCount.textContent = `${activeCount} Active Now`;
+            if (activeCount === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No active users detected.</td></tr>`;
+            }
+        }
+
+        function removeActiveSession() {
+            if (!currentUser) return;
+            let activeSessions = JSON.parse(localStorage.getItem("fixie_active_sessions") || "{}");
+            delete activeSessions[currentUser.username];
+            localStorage.setItem("fixie_active_sessions", JSON.stringify(activeSessions));
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const userVal = document.getElementById("username").value.trim();
+            const passVal = document.getElementById("password").value.trim();
+            const match = accounts.find(a => a.username.toLowerCase() === userVal.toLowerCase() && a.pass === passVal);
+
+            if (match) {
+                currentUser = match;
+                sessionStorage.setItem("fixie_logged_user", JSON.stringify(match));
+                document.getElementById("loginForm").reset();
+                showToast(`Welcome back, ${match.name}!`, "success");
+                applyUserRolePermissions();
+                updateHeartbeat("Dashboard Overview");
+                showDashboard();
+            } else {
+                showToast("Invalid Username or Password!", "error");
+            }
+        }
+
+        function handleSignUp(event) {
+            event.preventDefault();
+            const name = document.getElementById("signUpFullName").value.trim();
+            const username = document.getElementById("signUpUsername").value.trim();
+            const role = document.getElementById("signUpRole").value;
+            const pass = document.getElementById("signUpPassword").value;
+            const confirmPass = document.getElementById("signUpConfirmPassword").value;
+
+            if (pass !== confirmPass) {
+                showToast("Passwords do not match!", "error");
+                return;
+            }
+
+            if (accounts.some(a => a.username.toLowerCase() === username.toLowerCase())) {
+                showToast("Username is already taken!", "error");
+                return;
+            }
+
+            accounts.push({ username, pass, role, name });
+            saveAccounts();
+            document.getElementById("signUpForm").reset();
+            closeAuthModal("signUpModal");
+            showToast("Account created successfully! You can now log in.", "success");
+        }
+
+        function handleForgotUsername(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById("recoverFullName").value.trim().toLowerCase();
+            const match = accounts.find(a => a.name.toLowerCase() === nameInput);
+            const resultBox = document.getElementById("recoveredUserResult");
+            const displayEl = document.getElementById("displayRecoveredUsername");
+
+            if (match) {
+                displayEl.textContent = match.username;
+                resultBox.classList.remove("hidden");
+                showToast("Account found!", "success");
+            } else {
+                resultBox.classList.add("hidden");
+                showToast("No registered account found with that full name.", "error");
+            }
+        }
+
+        function handleResetPassword(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById("resetUsername").value.trim().toLowerCase();
+            const newPass = document.getElementById("resetNewPassword").value;
+            const confirmPass = document.getElementById("resetConfirmPassword").value;
+
+            if (newPass !== confirmPass) {
+                showToast("Passwords do not match!", "error");
+                return;
+            }
+
+            const account = accounts.find(a => a.username.toLowerCase() === usernameInput);
+            if (!account) {
+                showToast("Username does not exist!", "error");
+                return;
+            }
+
+            account.pass = newPass;
+            saveAccounts();
+            document.getElementById("forgotPassForm").reset();
+            closeAuthModal("forgotPassModal");
+            showToast("Password updated successfully! Please log in.", "success");
+        }
+
+        function checkSession() {
+            const storedUser = sessionStorage.getItem("fixie_logged_user");
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                applyUserRolePermissions();
+                updateHeartbeat("Dashboard Overview");
+                showDashboard();
+            } else {
+                showLoginPage();
+            }
+        }
+
+        function handleLogout() {
+            removeActiveSession();
+            sessionStorage.removeItem("fixie_logged_user");
+            currentUser = null;
+            showLoginPage();
+            showToast("Successfully logged out.", "info");
+        }
+
+        function showLoginPage() {
+            document.getElementById("authContainer").classList.remove("hidden");
+            document.getElementById("appContainer").classList.add("hidden");
+        }
+
+        function showDashboard() {
+            document.getElementById("authContainer").classList.add("hidden");
+            document.getElementById("appContainer").classList.remove("hidden");
+            document.getElementById("displayUserName").textContent = currentUser.username;
+            document.getElementById("displayUserRole").textContent = currentUser.role;
+            document.getElementById("userAvatar").textContent = currentUser.username.charAt(0).toUpperCase();
+            refreshAllViews();
+        }
+
+        function applyUserRolePermissions() {
+            const adminElements = document.querySelectorAll(".admin-only");
+            adminElements.forEach(el => el.style.display = (currentUser.role === "Admin") ? "block" : "none");
+        }
+
+        function togglePasswordVisibility(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(btnId);
+            const icon = btn.querySelector("i");
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+        function openAuthModal(id) {
+            if (id === 'forgotUserModal') {
+                document.getElementById("recoveredUserResult").classList.add("hidden");
+                document.getElementById("forgotUserForm").reset();
+            }
+            if (id === 'forgotPassModal') {
+                document.getElementById("forgotPassForm").reset();
+            }
+            document.getElementById(id).classList.remove("hidden");
+        }
+
+        function closeAuthModal(id) {
+            document.getElementById(id).classList.add("hidden");
+        }
+
+        function switchPage(pageId, btnEl) {
+            document.querySelectorAll(".page-content").forEach(p => {
+                p.classList.add("hidden-page");
+                p.classList.remove("active-page");
+            });
+            document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+
+            const targetPage = document.getElementById(pageId);
+            targetPage.classList.remove("hidden-page");
+            targetPage.classList.add("active-page");
+            if (btnEl) btnEl.classList.add("active");
+
+            const pageTitles = {
+                'dashboardPage': 'Dashboard Overview',
+                'inventoryPage': 'Inventory Management',
+                'stockPage': 'Stock Movement Control',
+                'logsPage': 'Activity & Audit Logs'
+            };
+            const title = pageTitles[pageId] || "Dashboard";
+            document.getElementById("currentPageTitle").textContent = title;
+
+            updateHeartbeat(title);
+            refreshAllViews();
+        }
+
+        function refreshAllViews() {
+            renderDashboardMetrics();
+            renderCharts();
+            renderInventoryTable();
+            populateStockSelect();
+            renderRecentLogs();
+            renderFullLogs();
+            renderLowStockPriority();
+            if (currentUser && currentUser.role === "Admin") {
+                renderActiveUsers();
+            }
+        }
+
+        function renderDashboardMetrics() {
+            document.getElementById("metricTotalProducts").textContent = inventory.length;
+            const totalVal = inventory.reduce((acc, item) => acc + (item.price * item.stock), 0);
+            document.getElementById("metricTotalValue").textContent = `₱${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById("metricLowStock").textContent = inventory.filter(item => item.stock > 0 && item.stock <= item.minStock).length;
+            document.getElementById("metricOutOfStock").textContent = inventory.filter(item => item.stock === 0).length;
+        }
+
+        function renderCharts() {
+            const categoryCounts = {};
+            inventory.forEach(item => {
+                categoryCounts[item.category] = (categoryCounts[item.category] || 0) + item.stock;
+            });
+
+            const ctxCat = document.getElementById("categoryChart").getContext("2d");
+            if (categoryChartInstance) categoryChartInstance.destroy();
+
+            categoryChartInstance = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categoryCounts),
+                    datasets: [{
+                        data: Object.values(categoryCounts),
+                        backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+                }
+            });
+
+            const sortedStock = [...inventory].sort((a, b) => b.stock - a.stock).slice(0, 6);
+            const ctxStock = document.getElementById("stockChart").getContext("2d");
+            if (stockChartInstance) stockChartInstance.destroy();
+
+            stockChartInstance = new Chart(ctxStock, {
+                type: 'bar',
+                data: {
+                    labels: sortedStock.map(i => i.sku),
+                    datasets: [{
+                        label: 'Stock On Hand',
+                        data: sortedStock.map(i => i.stock),
+                        backgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    },
+                    plugins: { legend: { labels: { color: '#94a3b8' } } }
+                }
+            });
+        }
+
+        function renderInventoryTable() {
+            const tbody = document.getElementById("inventoryTableBody");
+            const searchVal = document.getElementById("inventorySearch").value.toLowerCase();
+            const categoryVal = document.getElementById("categoryFilter").value;
+            tbody.innerHTML = "";
+
+            const filtered = inventory.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchVal) || item.sku.toLowerCase().includes(searchVal);
+                const matchesCat = (categoryVal === "ALL" || item.category === categoryVal);
+                return matchesSearch && matchesCat;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No products found matching filters.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                let statusBadge = `<span class="badge badge-success">In Stock</span>`;
+                if (item.stock === 0) statusBadge = `<span class="badge badge-danger">Out of Stock</span>`;
+                else if (item.stock <= item.minStock) statusBadge = `<span class="badge badge-warning">Low Stock</span>`;
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong>${item.sku}</strong></td>
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td>₱${item.price.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td><strong>${item.stock}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        ${currentUser.role === 'Admin' ? `
+                            <button class="btn btn-secondary btn-sm" onclick="openEditProductModal('${item.id}')" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${item.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                        ` : `<span style="color: var(--text-muted); font-size: 0.8rem;">Read Only</span>`}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openAddProductModal() {
+            document.getElementById("productModalTitle").innerHTML = `<i class="fa-solid fa-box"></i> Add New Product`;
+            document.getElementById("productForm").reset();
+            document.getElementById("prodId").value = "";
+            document.getElementById("productModal").classList.remove("hidden");
+        }
+
+        function openEditProductModal(id) {
+            const prod = inventory.find(i => i.id === id);
+            if (!prod) return;
+
+            document.getElementById("productModalTitle").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Product`;
+            document.getElementById("prodId").value = prod.id;
+            document.getElementById("prodSKU").value = prod.sku;
+            document.getElementById("prodName").value = prod.name;
+            document.getElementById("prodCategory").value = prod.category;
+            document.getElementById("prodPrice").value = prod.price;
+            document.getElementById("prodStock").value = prod.stock;
+            document.getElementById("prodMinStock").value = prod.minStock;
+            document.getElementById("productModal").classList.remove("hidden");
+        }
+
+        function closeProductModal() {
+            document.getElementById("productModal").classList.add("hidden");
+        }
+
+        function handleSaveProduct(event) {
+            event.preventDefault();
+            const id = document.getElementById("prodId").value;
+            const sku = document.getElementById("prodSKU").value.trim();
+            const name = document.getElementById("prodName").value.trim();
+            const category = document.getElementById("prodCategory").value;
+            const price = parseFloat(document.getElementById("prodPrice").value);
+            const stock = parseInt(document.getElementById("prodStock").value);
+            const minStock = parseInt(document.getElementById("prodMinStock").value);
+
+            if (id) {
+                const index = inventory.findIndex(i => i.id === id);
+                if (index !== -1) {
+                    inventory[index] = { id, sku, name, category, price, stock, minStock };
+                    addAuditLog(sku, name, "UPDATE", stock, "Product details updated");
+                    showToast("Product updated successfully!", "success");
+                }
+            } else {
+                const newId = Date.now().toString();
+                inventory.push({ id: newId, sku, name, category, price, stock, minStock });
+                addAuditLog(sku, name, "IN", stock, "Initial product creation stock");
+                showToast("New product added!", "success");
+            }
+
+            saveInventory();
+            closeProductModal();
+            refreshAllViews();
+        }
+
+        function deleteProduct(id) {
+            if (currentUser.role !== "Admin") {
+                showToast("Only Admins can delete items!", "error");
+                return;
+            }
+            const item = inventory.find(i => i.id === id);
+            if (confirm(`Are you sure you want to delete "${item ? item.name : 'this item'}"?`)) {
+                inventory = inventory.filter(i => i.id !== id);
+                saveInventory();
+                addAuditLog(item.sku, item.name, "DELETE", 0, "Product permanently removed");
+                refreshAllViews();
+                showToast("Product deleted.", "info");
+            }
+        }
+
+        function populateStockSelect() {
+            const select = document.getElementById("stockProductSelect");
+            if (!select) return;
+            select.innerHTML = "";
+            inventory.forEach(item => {
+                const opt = document.createElement("option");
+                opt.value = item.id;
+                opt.textContent = `[${item.sku}] ${item.name} (Current Stock: ${item.stock})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function handleStockMovement(event) {
+            event.preventDefault();
+            const prodId = document.getElementById("stockProductSelect").value;
+            const type = document.getElementById("stockType").value;
+            const qty = parseInt(document.getElementById("stockQty").value);
+            const notes = document.getElementById("stockNotes").value.trim();
+
+            const item = inventory.find(i => i.id === prodId);
+            if (!item) return;
+
+            if (type === "OUT" && item.stock < qty) {
+                showToast(`Insufficient stock! Available: ${item.stock}`, "error");
+                return;
+            }
+
+            if (type === "IN") item.stock += qty;
+            else item.stock -= qty;
+
+            saveInventory();
+            addAuditLog(item.sku, item.name, type, qty, notes || (type === "IN" ? "Restock" : "Stock Dispatch"));
+            document.getElementById("stockMovementForm").reset();
+            refreshAllViews();
+            showToast(`Successfully processed Stock ${type}! Updated stock: ${item.stock}`, "success");
+        }
+
+        function addAuditLog(sku, productName, type, qty, notes) {
+            logs.unshift({
+                timestamp: new Date().toLocaleString(),
+                sku,
+                productName,
+                type,
+                qty,
+                user: currentUser ? currentUser.username : "System",
+                notes
+            });
+            saveLogs();
+        }
+
+        function renderRecentLogs() {
+            const tbody = document.getElementById("recentLogsTable");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            const recent = logs.slice(0, 5);
+
+            if (recent.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No activity recorded yet.</td></tr>`;
+                return;
+            }
+
+            recent.forEach(log => {
+                let badgeClass = "badge-info";
+                if (log.type === "IN") badgeClass = "badge-success";
+                if (log.type === "OUT") badgeClass = "badge-warning";
+                if (log.type === "DELETE") badgeClass = "badge-danger";
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><small>${log.timestamp}</small></td>
+                    <td>${log.productName}</td>
+                    <td><span class="badge ${badgeClass}">${log.type}</span></td>
+                    <td><strong>${log.qty}</strong></td>
+                    <td>${log.user}</td>
+                    <td><small>${log.notes || '-'}</small></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderFullLogs() {
+            const tbody = document.getElementById("fullLogsTableBody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            if (logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No audit logs available.</td></tr>`;
+                return;
+            }
+
+            logs.forEach(log => {
+                let badgeClass = "badge-info";
+                if (log.type === "IN") badgeClass = "badge-success";
+                if (log.type === "OUT") badgeClass = "badge-warning";
+                if (log.type === "DELETE") badgeClass = "badge-danger";
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><small>${log.timestamp}</small></td>
+                    <td><strong>${log.sku}</strong> - ${log.productName}</td>
+                    <td><span class="badge ${badgeClass}">${log.type}</span></td>
+                    <td><strong>${log.qty}</strong></td>
+                    <td>${log.user}</td>
+                    <td>${log.notes || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderLowStockPriority() {
+            const tbody = document.getElementById("lowStockPriorityTable");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            const lowItems = inventory.filter(i => i.stock <= i.minStock);
+
+            if (lowItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--success);"><i class="fa-solid fa-check-circle"></i> All stock levels optimal.</td></tr>`;
+                return;
+            }
+
+            lowItems.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td><strong style="color: var(--danger);">${item.stock}</strong></td>
+                    <td><span class="badge ${item.stock === 0 ? 'badge-danger' : 'badge-warning'}">${item.stock === 0 ? 'Out of Stock' : 'Low Stock'}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toastContainer");
+            const toast = document.createElement("div");
+            toast.className = `toast toast-${type}`;
+            const icons = { success: "fa-circle-check", error: "fa-circle-xmark", info: "fa-circle-info" };
+
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || 'fa-bell'}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add("fade-out");
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

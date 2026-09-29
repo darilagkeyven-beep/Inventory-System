@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .card { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 20px; max-width: 400px; }
+        .status-online { color: green; font-weight: bold; }
+        .status-offline { color: red; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+
+</head>
+<body>
+
+    <h2>Admin Panel: User Activity Tracker</h2>
+
+    <div class="card">
+        <h3>Most Recently Active User</h3>
+        <p id="last-active">Loading...</p>
+    </div>
+
+    <div class="card">
+        <h3>Currently Online Users</h3>
+        <ul id="online-list">Loading...</ul>
+    </div>
+
+    <p id="error-message" class="error"></p>
+
+    <script>
+        // Change to 'user' to test the admin restriction
+        const currentUserRole = "admin"; 
+
+        async function fetchUserActivity() {
+            try {
+                const response = await fetch(`get_active_users.php?role=${currentUserRole}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    document.getElementById('error-message').innerText = errorData.message;
+                    document.getElementById('last-active').innerText = "N/A";
+                    document.getElementById('online-list').innerHTML = "";
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Render Most Recently Active User
+                if (data.last_active_user) {
+                    const status = data.last_active_user.is_online 
+                        ? '<span class="status-online">Online</span>' 
+                        : '<span class="status-offline">Offline</span>';
+
+                    document.getElementById('last-active').innerHTML = `
+                        <strong>Username:</strong> ${data.last_active_user.username}<br>
+                        <strong>Status:</strong> ${status}<br>
+                        <strong>Last Active:</strong> ${data.last_active_user.last_active}
+                    `;
+                }
+
+                // Render Currently Online Users List
+                const listElement = document.getElementById('online-list');
+                listElement.innerHTML = "";
+                
+                if (data.online_users.length > 0) {
+                    data.online_users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<strong>${user.username}</strong> (Active: ${user.last_active})`;
+                        listElement.appendChild(li);
+                    });
+                } else {
+                    listElement.innerHTML = "<li>No users currently online</li>";
+                }
+
+            } catch (err) {
+                console.error("Error fetching data:", err);
+            }
+        }
+
+        // Run fetch on load
+        fetchUserActivity();
+    </script>
+</body>
+</html>
