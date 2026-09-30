@@ -26,11 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user['role'] === 'admin') {
                 header("Location: index.html");
             } else {
-                header("Location: Inventory_2.html");
+                header("Location: Inventory_2_12.html");
             }
             exit();
         }
     }
-    echo "Invalid username or password. <a href='login.html'>Try again</a>";
+    echo "Invalid username or password. <a href='Inventory_2_12.html'>Try again</a>";
 }
 ?>

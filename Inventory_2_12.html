@@ -15,7 +15,7 @@
     <div id="authContainer" class="auth-wrapper">
         <div class="auth-card">
             <div class="auth-header">
-                <img src="fcv-logo.jpg" alt="FCV Logo" class="auth-logo">
+                <img src="FCV-Logo.jpg" alt="FCV Logo" class="auth-logo">
                 <h2>Fixie IT Services</h2>
                 <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Inventory & Stock Management System</p>
             </div>
@@ -59,7 +59,7 @@
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <img src="fcv-logo.jpg" alt="FCV Logo" class="sidebar-logo">
+                <img src="FCV-Logo.jpg" alt="FCV Logo" class="sidebar-logo">
                 <div class="brand-text">
                     <h3>Fixie IT System</h3>
                     <span>INVENTORY</span>
@@ -82,7 +82,7 @@
                     <i class="fa-solid fa-list-check"></i>
                     <span>Audit Logs</span>
                 </button>
-                <button class="nav-btn" type="button" onclick="openFixiePOS()">
+                <button class="nav-btn" type="button" onclick="openPOS()">
                     <i class="fa-solid fa-cash-register"></i>
                     <span>Point of Sale</span>
                 </button>
@@ -600,6 +600,18 @@
             localStorage.setItem("fixie_logs", JSON.stringify(logs));
         }
 
+        function openPOS() {
+            window.location.href = "../orderingsystem/pos/index.php";
+        }
+
+        // Keep the Inventory System synchronized with POS changes made in another tab/window.
+        window.addEventListener("storage", (event) => {
+            if (event.key === "fixie_inventory" || event.key === "fixie_logs" || event.key === "fixie_sales") {
+                loadStoredData();
+                refreshAllViews();
+            }
+        });
+
         function updateCurrentDate() {
             const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
             const dateStr = new Date().toLocaleDateString('en-US', options);
@@ -834,10 +846,6 @@
 
         function closeAuthModal(id) {
             document.getElementById(id).classList.add("hidden");
-        }
-
-        function openFixiePOS() {
-            window.location.href = "../pos/index.php";
         }
 
         function switchPage(pageId, btnEl) {

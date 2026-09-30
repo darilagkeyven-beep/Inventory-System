@@ -17,6 +17,6 @@ $_SESSION = array();
 session_destroy();
 
 // Redirect back to login screen
-header("Location: login.html");
+header("Location: Inventory_2_12.html");
 exit();
 ?>
