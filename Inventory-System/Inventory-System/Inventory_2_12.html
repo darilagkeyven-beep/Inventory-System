@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style_11.css">
+
 </head>
 <body>
 
@@ -49,6 +50,10 @@
                     <button type="button" class="btn-link" onclick="openAuthModal('forgotUserModal')">Forgot Username?</button>
                     <button type="button" class="btn-link" onclick="openAuthModal('forgotPassModal')">Forgot Password?</button>
                 </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Don't have an account? </span>
+                    <button type="button" class="btn-link" onclick="openAuthModal('signUpModal')">Sign Up</button>
+                </div>
             </form>
         </div>
     </div>
@@ -82,10 +87,6 @@
                     <i class="fa-solid fa-list-check"></i>
                     <span>Audit Logs</span>
                 </button>
-                <button class="nav-btn" type="button" onclick="openFixiePOS()">
-                    <i class="fa-solid fa-cash-register"></i>
-                    <span>Point of Sale</span>
-                </button>
             </nav>
             <div style="padding-top: 15px; border-top: 1px solid var(--border-color);">
                 <button class="btn btn-secondary full-width" onclick="seedSampleData()">
@@ -103,10 +104,6 @@
                     <span id="currentDate"></span>
                 </div>
                 <div class="user-profile" style="display: flex; align-items: center; gap: 12px;">
-                    <!-- ADMIN ONLY BUTTON TO CREATE ACCOUNT -->
-                    <button class="btn btn-primary btn-sm admin-only" onclick="openAuthModal('signUpModal')">
-                        <i class="fa-solid fa-user-plus"></i> Create Account
-                    </button>
                     <div class="user-avatar" id="userAvatar">A</div>
                     <div>
                         <div id="displayUserName" style="font-weight: 600; font-size: 0.9rem;">User</div>
@@ -412,7 +409,7 @@
         </div>
     </div>
 
-    <!-- CREATE ACCOUNT MODAL (ADMIN ONLY) -->
+    <!-- SIGN UP MODAL -->
     <div id="signUpModal" class="modal-backdrop hidden">
         <div class="modal">
             <div class="modal-header">
@@ -518,6 +515,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+
     <script>
         const DEFAULT_ACCOUNTS = [
             { username: "seanlander", pass: "espiritu20", role: "Admin", name: "Sean Lander Espiritu" },
@@ -693,15 +691,8 @@
             }
         }
 
-        // STRICT ADMIN-ONLY ACCOUNT CREATION
         function handleSignUp(event) {
             event.preventDefault();
-
-            if (!currentUser || currentUser.role !== "Admin") {
-                showToast("Permission Denied: Only Admins can create accounts!", "error");
-                return;
-            }
-
             const name = document.getElementById("signUpFullName").value.trim();
             const username = document.getElementById("signUpUsername").value.trim();
             const role = document.getElementById("signUpRole").value;
@@ -722,7 +713,7 @@
             saveAccounts();
             document.getElementById("signUpForm").reset();
             closeAuthModal("signUpModal");
-            showToast(`Account created successfully for ${name} (${role})!`, "success");
+            showToast("Account created successfully! You can now log in.", "success");
         }
 
         function handleForgotUsername(event) {
@@ -802,7 +793,7 @@
 
         function applyUserRolePermissions() {
             const adminElements = document.querySelectorAll(".admin-only");
-            adminElements.forEach(el => el.style.display = (currentUser && currentUser.role === "Admin") ? "block" : "none");
+            adminElements.forEach(el => el.style.display = (currentUser.role === "Admin") ? "block" : "none");
         }
 
         function togglePasswordVisibility(inputId, btnId) {
@@ -834,10 +825,6 @@
 
         function closeAuthModal(id) {
             document.getElementById(id).classList.add("hidden");
-        }
-
-        function openFixiePOS() {
-            window.location.href = "../pos/index.php";
         }
 
         function switchPage(pageId, btnEl) {
@@ -968,7 +955,7 @@
                     <td><strong>${item.stock}</strong></td>
                     <td>${statusBadge}</td>
                     <td>
-                        ${currentUser && currentUser.role === 'Admin' ? `
+                        ${currentUser.role === 'Admin' ? `
                             <button class="btn btn-secondary btn-sm" onclick="openEditProductModal('${item.id}')" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
                             <button class="btn btn-danger btn-sm" onclick="deleteProduct('${item.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
                         ` : `<span style="color: var(--text-muted); font-size: 0.8rem;">Read Only</span>`}
@@ -1034,7 +1021,7 @@
         }
 
         function deleteProduct(id) {
-            if (!currentUser || currentUser.role !== "Admin") {
+            if (currentUser.role !== "Admin") {
                 showToast("Only Admins can delete items!", "error");
                 return;
             }
